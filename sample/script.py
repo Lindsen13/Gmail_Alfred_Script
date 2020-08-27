@@ -37,15 +37,17 @@ def main():
 
     # Call the Gmail API
     results = service.users().messages().list(userId='me', q='label:inbox is:unread').execute()
-    id = results.get('messages')[0].get('id')
-    number_of_mails = len(results.get('messages'))
-    results = service.users().messages().get(userId='me', id=id).execute()
-    sender = results.get('payload').get('headers')[4].get('value')
-    for element in results.get('payload').get('headers'):
-        if element.get('name') == 'From':
-            sender = element.get('value')
-    import re
-    sender = re.search(r'<(.*)>', str(sender)).group(1)
+    if results.get('messages'):
+        id = results.get('messages')[0].get('id')
+        number_of_mails = len(results.get('messages'))
+        results_mails = service.users().messages().get(userId='me', id=id).execute()
+        sender = results_mails.get('payload').get('headers')[4].get('value')
+        for element in results_mails.get('payload').get('headers'):
+            if element.get('name') == 'From':
+                sender = element.get('value')
+                sender = re.search(r'<(.*)>', str(sender)).group(1)
+    else:
+        number_of_mails = 0
 
     if number_of_mails > 0:
         query = f"{number_of_mails} unread email;Last mail from {sender}."
